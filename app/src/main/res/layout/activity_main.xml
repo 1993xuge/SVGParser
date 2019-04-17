@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.xuge.libsvg.SVGImageView
+    <com.xuge.svgparser.CustomSvgImageView
         android:id="@+id/svg"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

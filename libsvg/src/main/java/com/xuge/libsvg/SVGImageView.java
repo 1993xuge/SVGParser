@@ -311,7 +311,7 @@ public class SVGImageView extends ImageView {
         if (svg == null)
             return;
         Picture picture = this.svg.renderToPicture(renderOptions);
-        setSoftwareLayerType();
+//        setSoftwareLayerType();
         setImageDrawable(new PictureDrawable(picture));
 
         Log.d("xuge", "doRender: getWidth = " + picture.getWidth() + "   getHeight = " + picture.getHeight());
