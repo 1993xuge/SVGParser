@@ -41,8 +41,16 @@ public class RenderOptions {
     //String               id = null;
     PreserveAspectRatio preserveAspectRatio = null;
     String targetId = null;
+
+    /**
+     * 当前需要渲染的ViewBox
+     */
     SVG.Box viewBox = null;
     String viewId = null;
+
+    /**
+     * 需要渲染的picture的实际大小（单位px）
+     */
     SVG.Box viewPort = null;
 
 

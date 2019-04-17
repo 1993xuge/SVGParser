@@ -358,31 +358,38 @@ public class SVG {
      */
     @SuppressWarnings({"WeakerAccess", "unused"})
     public Picture renderToPicture(RenderOptions renderOptions) {
+        // 保证viewBox不为空，要么从renderOptions中获取，要么从rootElement中获取
         Box viewBox = (renderOptions != null && renderOptions.hasViewBox()) ? renderOptions.viewBox
                 : rootElement.viewBox;
 
         // If a viewPort was supplied in the renderOptions, then use its maxX and maxY as the Picture size
         if (renderOptions != null && renderOptions.hasViewPort()) {
+            Log.d("xuge", "renderToPicture: 1");
             float w = renderOptions.viewPort.maxX();
             float h = renderOptions.viewPort.maxY();
             return renderToPicture((int) Math.ceil(w), (int) Math.ceil(h), renderOptions);
         } else if (rootElement.width != null && rootElement.width.unit != Unit.percent &&
                 rootElement.height != null && rootElement.height.unit != Unit.percent) {
+            Log.d("xuge", "renderToPicture: 2");
             float w = rootElement.width.floatValue(this.renderDPI);
             float h = rootElement.height.floatValue(this.renderDPI);
+            Log.d("xuge", "renderToPicture: w = " + w + "   h = " + h);
             return renderToPicture((int) Math.ceil(w), (int) Math.ceil(h), renderOptions);
         } else if (rootElement.width != null && viewBox != null) {
+            Log.d("xuge", "renderToPicture: 3");
             // Width and viewBox supplied, but no height
             // Determine the Picture size and initial viewport. See SVG spec section 7.12.
             float w = rootElement.width.floatValue(this.renderDPI);
             float h = w * viewBox.height / viewBox.width;
             return renderToPicture((int) Math.ceil(w), (int) Math.ceil(h), renderOptions);
         } else if (rootElement.height != null && viewBox != null) {
+            Log.d("xuge", "renderToPicture: 4");
             // Height and viewBox supplied, but no width
             float h = rootElement.height.floatValue(this.renderDPI);
             float w = h * viewBox.width / viewBox.height;
             return renderToPicture((int) Math.ceil(w), (int) Math.ceil(h), renderOptions);
         } else {
+            Log.d("xuge", "renderToPicture: 5");
             return renderToPicture(DEFAULT_PICTURE_WIDTH, DEFAULT_PICTURE_HEIGHT, renderOptions);
         }
     }
@@ -403,6 +410,7 @@ public class SVG {
         Canvas canvas = picture.beginRecording(widthInPixels, heightInPixels);
 
         if (renderOptions == null || renderOptions.viewPort == null) {
+            // 保证 renderOptions和renderOptions.viewPort不为null，并且为renderOptions.viewPort进行赋值
             renderOptions = (renderOptions == null) ? new RenderOptions() : new RenderOptions(renderOptions);
             renderOptions.viewPort(0f, 0f, (float) widthInPixels, (float) heightInPixels);
         }
@@ -1650,6 +1658,10 @@ public class SVG {
 
 
     static abstract class SvgViewBoxContainer extends SvgPreserveAspectRatioContainer {
+
+        /**
+         * svg文件中viewBox属性的值
+         */
         Box viewBox;
     }
 

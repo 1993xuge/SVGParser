@@ -258,6 +258,7 @@ class SVGAndroidRenderer {
             viewBox = view.viewBox;
             preserveAspectRatio = view.preserveAspectRatio;
         } else {
+            // 保证viewBox不为null，要么从renderOptions中获取，要么从rootObj中获取
             viewBox = renderOptions.hasViewBox() ? renderOptions.viewBox
                     : rootObj.viewBox;
             preserveAspectRatio = renderOptions.hasPreserveAspectRatio() ? renderOptions.preserveAspectRatio
@@ -280,13 +281,17 @@ class SVGAndroidRenderer {
         statePush();
 
         Box viewPort = new Box(renderOptions.viewPort);
+        Log.d(TAG, "renderDocument: rootObj.width = " + rootObj.width +"   viewPort.height = " + viewPort.height);
         // If root element specifies a width, then we need to adjust our default viewPort that was based on the canvas size
         if (rootObj.width != null)
             viewPort.width = rootObj.width.floatValue(this, viewPort.width);
         if (rootObj.height != null)
             viewPort.height = rootObj.height.floatValue(this, viewPort.height);
 
-        // Render the document
+        // Render the document,
+        // rootObj根节点，
+        // viewPort需要渲染的Picture的尺寸，
+        // viewBox当前需要渲染的viewBox（SVG文件中path的范围）
         render(rootObj, viewPort, viewBox, preserveAspectRatio);
 
         // Restore state
@@ -351,6 +356,7 @@ class SVGAndroidRenderer {
             parentPush(obj);
         }
 
+        // 遍历svg子节点，对子节点进行渲染
         for (SVG.SvgObject child : obj.getChildren()) {
             render(child);
         }
@@ -438,6 +444,7 @@ class SVGAndroidRenderer {
 
     /*
      * Fill a path with either the given paint, or if a pattern is set, with the pattern.
+     * 使用给定的颜色填充路径，或者如果设置了图案，则使用该图案填充路径。
      */
     private void doFilledPath(SvgElement obj, Path path) {
         // First check for pattern fill. It requires special handling.
@@ -553,6 +560,7 @@ class SVGAndroidRenderer {
         if (positioning == null)
             positioning = (obj.preserveAspectRatio != null) ? obj.preserveAspectRatio : PreserveAspectRatio.LETTERBOX;
 
+        // 将svg节点的 style 更新到state中
         updateStyleForElement(state, obj);
 
         if (!display())
@@ -567,6 +575,7 @@ class SVGAndroidRenderer {
         checkForClipPath(obj, state.viewPort);
 
         if (viewBox != null) {
+            // 对 canvas 进行矩阵变换
             canvas.concat(calculateViewBoxTransform(state.viewPort, viewBox, positioning));
             state.viewBox = obj.viewBox;  // Note: definitely obj.viewBox here. Not viewBox parameter.
         } else {
@@ -998,13 +1007,14 @@ class SVGAndroidRenderer {
 
     //==============================================================================
 
-
+    // 渲染 SVG.Path
     private void render(SVG.Path obj) {
         debug("Path render");
 
         if (obj.d == null)
             return;
 
+        // 将path中的style更新到state中
         updateStyleForElement(state, obj);
 
         if (!display())
@@ -1017,6 +1027,7 @@ class SVGAndroidRenderer {
         if (obj.transform != null)
             canvas.concat(obj.transform);
 
+        // 生成 path
         Path path = (new PathConverter(obj.d)).getPath();
 
         if (obj.boundingBox == null) {
@@ -1984,6 +1995,8 @@ class SVGAndroidRenderer {
     /*
      * Updates the global style state with the style defined by the current object.
      * Will also update the current paints etc where appropriate.
+     *
+     * 将 style中的值 更新到 RendererState中
      */
     private void updateStyle(RendererState state, Style style) {
         // Now update each style property we know about
