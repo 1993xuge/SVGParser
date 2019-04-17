@@ -48,11 +48,13 @@ import java.lang.reflect.Method;
  */
 @SuppressWarnings("JavaDoc")
 public class SVGImageView extends ImageView {
-    private SVG svg = null;
-    private RenderOptions renderOptions = new RenderOptions();
+    protected SVG svg = null;
+    protected RenderOptions renderOptions = new RenderOptions();
 
     private static Method setLayerTypeMethod = null;
 
+    protected int pictureWidth;
+    protected int pictureHeight;
 
     static {
         try {
@@ -313,6 +315,9 @@ public class SVGImageView extends ImageView {
         Picture picture = this.svg.renderToPicture(renderOptions);
 //        setSoftwareLayerType();
         setImageDrawable(new PictureDrawable(picture));
+
+        pictureWidth = picture.getWidth();
+        pictureHeight = picture.getHeight();
 
         Log.d("xuge", "doRender: getWidth = " + picture.getWidth() + "   getHeight = " + picture.getHeight());
     }

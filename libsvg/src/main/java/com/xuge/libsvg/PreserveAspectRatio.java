@@ -207,7 +207,7 @@ public class PreserveAspectRatio {
     /*
      * Private constructor
      */
-    PreserveAspectRatio(Alignment alignment, Scale scale) {
+    public PreserveAspectRatio(Alignment alignment, Scale scale) {
         this.alignment = alignment;
         this.scale = scale;
     }

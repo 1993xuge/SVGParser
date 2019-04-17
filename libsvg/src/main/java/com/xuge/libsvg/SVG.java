@@ -647,6 +647,19 @@ public class SVG {
         return viewIds;
     }
 
+    public Set<Path> getPathList() {
+        if (this.rootElement == null)
+            throw new IllegalArgumentException("SVG document is empty");
+
+        List<SvgObject> viewElems = getElementsByTagName("path");
+
+        Set<Path> viewIds = new HashSet<>(viewElems.size());
+        for (SvgObject elem : viewElems) {
+            Path view = (Path) elem;
+            viewIds.add(view);
+        }
+        return viewIds;
+    }
 
     /**
      * Returns the width of the document as specified in the SVG file.
@@ -877,7 +890,7 @@ public class SVG {
     //===============================================================================
 
 
-    Svg getRootElement() {
+    public Svg getRootElement() {
         return rootElement;
     }
 
@@ -968,10 +981,10 @@ public class SVG {
     // Object sub-types used in the SVG object tree
 
 
-    static class Box {
+    public static class Box {
         float minX, minY, width, height;
 
-        Box(float minX, float minY, float width, float height) {
+        public Box(float minX, float minY, float width, float height) {
             this.minX = minX;
             this.minY = minY;
             this.width = width;
@@ -998,12 +1011,20 @@ public class SVG {
             return new RectF(minX, minY, maxX(), maxY());
         }
 
-        float maxX() {
+        public float maxX() {
             return minX + width;
         }
 
-        float maxY() {
+        public float maxY() {
             return minY + height;
+        }
+
+        public float getMinX() {
+            return minX;
+        }
+
+        public float getMinY() {
+            return minY;
         }
 
         void union(Box other) {
@@ -1068,7 +1089,7 @@ public class SVG {
                                                           | SPECIFIED_VIEWPORT_FILL_OPACITY | SPECIFIED_VECTOR_EFFECT;
    */
 
-    static class Style implements Cloneable {
+    public static class Style implements Cloneable {
         // Which properties have been explicitly specified by this element
         long specifiedFlags = 0;
 
@@ -1259,6 +1280,20 @@ public class SVG {
             }
             return obj;
         }
+
+        public void setColor(int color) {
+            if (fill instanceof Colour) {
+                ((Colour) fill).setColour(color);
+            }
+        }
+
+        public int getColor() {
+            if (fill instanceof Colour) {
+                return ((Colour) fill).colour;
+            } else {
+                return 0;
+            }
+        }
     }
 
 
@@ -1275,6 +1310,10 @@ public class SVG {
 
         Colour(int val) {
             this.colour = val;
+        }
+
+        public void setColour(int colour) {
+            this.colour = colour;
         }
 
         public String toString() {
@@ -1476,12 +1515,20 @@ public class SVG {
         public String toString() {
             return this.getNodeName();
         }
+
+        public Style getBaseStyle() {
+            return baseStyle;
+        }
     }
 
 
     // Any object in the tree that corresponds to an SVG element
     static abstract class SvgElement extends SvgElementBase {
         Box boundingBox = null;
+
+        public Box getBoundingBox() {
+            return boundingBox;
+        }
     }
 
 
@@ -1663,10 +1710,14 @@ public class SVG {
          * svg文件中viewBox属性的值
          */
         Box viewBox;
+
+        public Box getViewBox() {
+            return viewBox;
+        }
     }
 
 
-    static class Svg extends SvgViewBoxContainer {
+    public static class Svg extends SvgViewBoxContainer {
         Length x;
         Length y;
         Length width;
@@ -1736,13 +1787,25 @@ public class SVG {
     }
 
 
-    static class Path extends GraphicsElement {
+    public static class Path extends GraphicsElement {
         PathDefinition d;
         Float pathLength;
 
         @Override
         String getNodeName() {
             return "path";
+        }
+
+        public PathDefinition getD() {
+            return d;
+        }
+
+        @Override
+        public String toString() {
+            return "Path{" +
+                    "d=" + d +
+                    ", pathLength=" + pathLength +
+                    '}';
         }
     }
 

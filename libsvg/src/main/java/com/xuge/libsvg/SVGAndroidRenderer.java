@@ -86,7 +86,7 @@ import java.util.Stack;
  * The rendering part of AndroidSVG.
  */
 
-class SVGAndroidRenderer {
+public class SVGAndroidRenderer {
     private static final String TAG = "SVGAndroidRenderer";
 
     private Canvas canvas;
@@ -1922,7 +1922,7 @@ class SVGAndroidRenderer {
      * Note values in the two Box parameters whould be in user units. If you pass values
      * that are in "objectBoundingBox" space, you will get incorrect results.
      */
-    private Matrix calculateViewBoxTransform(Box viewPort, Box viewBox, PreserveAspectRatio positioning) {
+    public static Matrix calculateViewBoxTransform(Box viewPort, Box viewBox, PreserveAspectRatio positioning) {
         Matrix m = new Matrix();
 
         if (positioning == null || positioning.getAlignment() == null)
@@ -2368,17 +2368,17 @@ class SVGAndroidRenderer {
     /*
      *  Convert an internal PathDefinition to an android.graphics.Path object
      */
-    private class PathConverter implements PathInterface {
+    public static class PathConverter implements PathInterface {
         Path path = new Path();
         float lastX, lastY;
 
-        PathConverter(PathDefinition pathDef) {
+        public PathConverter(PathDefinition pathDef) {
             if (pathDef == null)
                 return;
             pathDef.enumeratePath(this);
         }
 
-        Path getPath() {
+        public Path getPath() {
             return path;
         }
 
