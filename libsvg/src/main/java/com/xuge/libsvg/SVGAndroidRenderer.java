@@ -281,7 +281,7 @@ public class SVGAndroidRenderer {
         statePush();
 
         Box viewPort = new Box(renderOptions.viewPort);
-        Log.d(TAG, "renderDocument: rootObj.width = " + rootObj.width +"   viewPort.height = " + viewPort.height);
+        Log.d(TAG, "renderDocument: rootObj.width = " + rootObj.width + "   viewPort.height = " + viewPort.height);
         // If root element specifies a width, then we need to adjust our default viewPort that was based on the canvas size
         if (rootObj.width != null)
             viewPort.width = rootObj.width.floatValue(this, viewPort.width);
@@ -1028,7 +1028,12 @@ public class SVGAndroidRenderer {
             canvas.concat(obj.transform);
 
         // 生成 path
-        Path path = (new PathConverter(obj.d)).getPath();
+        Path path = obj.getPath();
+        if (path == null) {
+
+            path = (new PathConverter(obj.d)).getPath();
+            obj.path = path;
+        }
 
         if (obj.boundingBox == null) {
             obj.boundingBox = calculatePathBounds(path);

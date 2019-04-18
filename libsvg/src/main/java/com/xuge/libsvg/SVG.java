@@ -21,6 +21,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Path;
 import android.graphics.Picture;
 import android.graphics.RectF;
 import android.util.Log;
@@ -1791,6 +1792,8 @@ public class SVG {
         PathDefinition d;
         Float pathLength;
 
+        android.graphics.Path path;
+
         @Override
         String getNodeName() {
             return "path";
@@ -1798,6 +1801,10 @@ public class SVG {
 
         public PathDefinition getD() {
             return d;
+        }
+
+        public android.graphics.Path getPath() {
+            return path;
         }
 
         @Override

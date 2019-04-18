@@ -1,8 +1,10 @@
 package com.xuge.svgparser;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Picture;
 import android.graphics.RectF;
@@ -76,10 +78,54 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
     public void onPhotoTap(ImageView view, float x, float y) {
         Log.d(TAG, "onPhotoTap: x = " + x + "   y = " + y);
 
-        int lX = Math.round(x * pictureWidth);
-        int lY = Math.round(y * pictureHeight);
-        fillColor(lX, lY);
+        fillColor(x, y);
     }
+
+    private void changeColor(float x, float y) {
+        float[] floats = svgPoints(new float[]{x, y});
+
+        Paint paint = new Paint();
+        paint.setAntiAlias(true);
+
+        Picture picture = ((PictureDrawable) getDrawable()).getPicture();
+        Canvas canvas = picture.beginRecording(picture.getWidth(), picture.getHeight());
+
+        SVG.Svg rootObj = svg.getRootElement();
+        SVG.Box viewBox = rootObj.getViewBox();
+        SVG.Box viewPort = new SVG.Box(0, 0, pictureWidth, pictureHeight);
+        PreserveAspectRatio positioning = new PreserveAspectRatio(PreserveAspectRatio.Alignment.xMidYMid, PreserveAspectRatio.Scale.meet);
+        canvas.concat(SVGAndroidRenderer.calculateViewBoxTransform(viewPort, viewBox, positioning));
+
+        Random random = new Random();
+        for (SVG.Path sPath : svg.getPathList()) {
+            int color = sPath.getBaseStyle().getColor();
+            if (color != Color.BLACK && isRightPath(sPath, floats[0], floats[1])) {
+                color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+                sPath.getBaseStyle().setColor(color);
+            }
+            paint.setColor(color);
+            Path path = sPath.getPath();
+            if (path != null) {
+                canvas.drawPath(path, paint);
+            }
+        }
+        picture.endRecording();
+        invalidate();
+
+    }
+
+    private boolean isRightPath(SVG.Path svgPath, float x, float y) {
+        Region region = new Region();
+        SVG.Box box = svgPath.getBoundingBox();
+        Path path = (new SVGAndroidRenderer.PathConverter(svgPath.getD())).getPath();
+        region.setPath(path, new Region((int) box.getMinX(), (int) box.getMinY(), (int) box.maxX(), (int) box.maxY()));
+        if (region.contains((int) x, (int) y)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     private SVG.Path svgPath;
 

@@ -178,6 +178,34 @@ public class PhotoViewAttacher implements View.OnTouchListener,
         mGestureDetector = new GestureDetector(imageView.getContext(),
                 new GestureDetector.SimpleOnGestureListener() {
 
+                    @Override
+                    public boolean onSingleTapUp(MotionEvent e) {
+                        if (mOnClickListener != null) {
+                            mOnClickListener.onClick(mImageView);
+                        }
+
+                        final RectF displayRect = getDisplayRect();
+                        final float x = e.getX(), y = e.getY();
+                        if (mViewTapListener != null) {
+                            mViewTapListener.onViewTap(mImageView, x, y);
+                        }
+                        if (displayRect != null) {
+                            // Check to see if the user tapped on the photo
+                            if (displayRect.contains(x, y)) {
+                                if (mPhotoTapListener != null) {
+                                    // 返回比例位置
+                                    mPhotoTapListener.onPhotoTap(mImageView, x, y);
+                                }
+                                return true;
+                            } else {
+                                if (mOutsidePhotoTapListener != null) {
+                                    mOutsidePhotoTapListener.onOutsidePhotoTap(mImageView);
+                                }
+                            }
+                        }
+                        return false;
+                    }
+
                     // forward long click listener
                     @Override
                     public void onLongPress(MotionEvent e) {
@@ -206,67 +234,67 @@ public class PhotoViewAttacher implements View.OnTouchListener,
                     }
                 });
         // 双击
-        mGestureDetector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener() {
-            @Override
-            public boolean onSingleTapConfirmed(MotionEvent e) {
-                if (mOnClickListener != null) {
-                    mOnClickListener.onClick(mImageView);
-                }
-
-                final RectF displayRect = getDisplayRect();
-                final float x = e.getX(), y = e.getY();
-                if (mViewTapListener != null) {
-                    mViewTapListener.onViewTap(mImageView, x, y);
-                }
-                if (displayRect != null) {
-                    // Check to see if the user tapped on the photo
-                    if (displayRect.contains(x, y)) {
-                        float xResult = (x - displayRect.left)
-                                / displayRect.width();
-                        float yResult = (y - displayRect.top)
-                                / displayRect.height();
-                        if (mPhotoTapListener != null) {
-                            // 返回比例位置
-                            mPhotoTapListener.onPhotoTap(mImageView, xResult, yResult);
-                        }
-                        return true;
-                    } else {
-                        if (mOutsidePhotoTapListener != null) {
-                            mOutsidePhotoTapListener.onOutsidePhotoTap(mImageView);
-                        }
-                    }
-                }
-                return false;
-            }
-
-            @Override
-            public boolean onDoubleTap(MotionEvent ev) {
-                try {
-                    float scale = getScale();
-                    float x = ev.getX();
-                    float y = ev.getY();
-                    if (scale < getMediumScale()) {
-                        // 当前缩放程度 小于 Medium，则将其设置为 Medium
-                        setScale(getMediumScale(), x, y, true);
-                    } else if (scale >= getMediumScale() && scale < getMaximumScale()) {
-                        // 当前 的缩放程度 大于Medium 小于Max，则将其设置为Max。
-                        setScale(getMaximumScale(), x, y, true);
-                    } else {
-                        // 否则，将其设置为最小的比例
-                        setScale(getMinimumScale(), x, y, true);
-                    }
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    // Can sometimes happen when getX() and getY() is called
-                }
-                return true;
-            }
-
-            @Override
-            public boolean onDoubleTapEvent(MotionEvent e) {
-                // Wait for the confirmed onDoubleTap() instead
-                return false;
-            }
-        });
+//        mGestureDetector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener() {
+//            @Override
+//            public boolean onSingleTapConfirmed(MotionEvent e) {
+//                if (mOnClickListener != null) {
+//                    mOnClickListener.onClick(mImageView);
+//                }
+//
+//                final RectF displayRect = getDisplayRect();
+//                final float x = e.getX(), y = e.getY();
+//                if (mViewTapListener != null) {
+//                    mViewTapListener.onViewTap(mImageView, x, y);
+//                }
+//                if (displayRect != null) {
+//                    // Check to see if the user tapped on the photo
+//                    if (displayRect.contains(x, y)) {
+//                        float xResult = (x - displayRect.left)
+//                                / displayRect.width();
+//                        float yResult = (y - displayRect.top)
+//                                / displayRect.height();
+//                        if (mPhotoTapListener != null) {
+//                            // 返回比例位置
+//                            mPhotoTapListener.onPhotoTap(mImageView, xResult, yResult);
+//                        }
+//                        return true;
+//                    } else {
+//                        if (mOutsidePhotoTapListener != null) {
+//                            mOutsidePhotoTapListener.onOutsidePhotoTap(mImageView);
+//                        }
+//                    }
+//                }
+//                return false;
+//            }
+//
+//            @Override
+//            public boolean onDoubleTap(MotionEvent ev) {
+//                try {
+//                    float scale = getScale();
+//                    float x = ev.getX();
+//                    float y = ev.getY();
+//                    if (scale < getMediumScale()) {
+//                        // 当前缩放程度 小于 Medium，则将其设置为 Medium
+//                        setScale(getMediumScale(), x, y, true);
+//                    } else if (scale >= getMediumScale() && scale < getMaximumScale()) {
+//                        // 当前 的缩放程度 大于Medium 小于Max，则将其设置为Max。
+//                        setScale(getMaximumScale(), x, y, true);
+//                    } else {
+//                        // 否则，将其设置为最小的比例
+//                        setScale(getMinimumScale(), x, y, true);
+//                    }
+//                } catch (ArrayIndexOutOfBoundsException e) {
+//                    // Can sometimes happen when getX() and getY() is called
+//                }
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onDoubleTapEvent(MotionEvent e) {
+//                // Wait for the confirmed onDoubleTap() instead
+//                return false;
+//            }
+//        });
     }
 
     public void setOnDoubleTapListener(GestureDetector.OnDoubleTapListener newOnDoubleTapListener) {

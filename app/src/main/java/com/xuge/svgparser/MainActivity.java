@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         final SVGImageView imageView = findViewById(R.id.svg);
 
         try {
-            final SVG svg = SVG.getFromResource(MainActivity.this, R.raw.tarot_13);
+            final SVG svg = SVG.getFromResource(MainActivity.this, R.raw.lion);
 
             imageView.post(new Runnable() {
                 @Override
