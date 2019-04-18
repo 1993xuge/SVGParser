@@ -16,6 +16,7 @@
 
 package com.xuge.libsvg;
 
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.util.Log;
 import android.util.Xml;
@@ -1232,6 +1233,14 @@ class SVGParser {
         parseAttributesConditional(obj, attributes);
         currentElement.addChild(obj);
         currentElement = obj;
+
+        try {
+            String colorStr = obj.id.substring(0, 7);
+            obj.color = Color.parseColor(colorStr);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 
@@ -1382,6 +1391,8 @@ class SVGParser {
         parseAttributesConditional(obj, attributes);
         parseAttributesPath(obj, attributes);
         currentElement.addChild(obj);
+
+        svgDocument.classifyPath(obj);
     }
 
 

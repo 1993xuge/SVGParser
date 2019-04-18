@@ -5,6 +5,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -12,19 +13,37 @@ import com.xuge.libsvg.SVG;
 import com.xuge.libsvg.SVGImageView;
 import com.xuge.libsvg.SVGParseException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "xuge";
+
+    private List<Integer> colorList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         immersiveStyleBar();
         setContentView(R.layout.activity_main);
+        colorList = new ArrayList<>();
 
         final SVGImageView imageView = findViewById(R.id.svg);
 
         try {
             final SVG svg = SVG.getFromResource(MainActivity.this, R.raw.lion);
+
+            SparseArray<List<SVG.Path>> sparseArray = svg.getClassifiedPaths();
+            for (int i = 0; i < sparseArray.size(); i++) {
+                int key = sparseArray.keyAt(i);
+                colorList.add(key);
+                List<SVG.Path> paths = sparseArray.get(key);
+                Log.d("wyx", "+++++++++++++++++++++  " + Integer.toHexString(key) + "  +++++++++++++++++++++");
+                for (SVG.Path path : paths) {
+                    Log.d("wyx", path.getId());
+                }
+            }
+
 
             imageView.post(new Runnable() {
                 @Override

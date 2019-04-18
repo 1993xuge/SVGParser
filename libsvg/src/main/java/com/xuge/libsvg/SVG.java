@@ -20,11 +20,12 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Path;
 import android.graphics.Picture;
 import android.graphics.RectF;
 import android.util.Log;
+import android.util.SparseArray;
 
 import com.xuge.libsvg.CSSParser.Ruleset;
 
@@ -106,6 +107,7 @@ public class SVG {
     // Map from id attribute to element
     private Map<String, SvgElementBase> idToElementMap = new HashMap<>();
 
+    private SparseArray<List<Path>> classifiedPathArray = new SparseArray<>();
 
     enum Unit {
         px,
@@ -1520,6 +1522,10 @@ public class SVG {
         public Style getBaseStyle() {
             return baseStyle;
         }
+
+        public String getId() {
+            return id;
+        }
     }
 
 
@@ -1735,6 +1741,7 @@ public class SVG {
     // An SVG element that can contain other elements.
     static class Group extends SvgConditionalContainer implements HasTransform {
         Matrix transform;
+        int color = Color.BLACK;
 
         @Override
         public void setTransform(Matrix transform) {
@@ -2451,6 +2458,27 @@ public class SVG {
             for (SvgObject child : ((SvgContainer) obj).getChildren())
                 getElementsByTagName(result, child, nodeName);
         }
+    }
+
+    protected void classifyPath(Path path) {
+        SvgContainer parent = path.parent;
+        if (parent instanceof Group) {
+            int color = ((Group) parent).color;
+            List<Path> paths = classifiedPathArray.get(color);
+            if (paths == null) {
+                paths = new ArrayList<>();
+            }
+            paths.add(path);
+            classifiedPathArray.put(color, paths);
+        }
+    }
+
+    public SparseArray<List<Path>> getClassifiedPaths() {
+        return classifiedPathArray;
+    }
+
+    public List<Path> getPathsByColor(int color) {
+        return classifiedPathArray.get(color);
     }
 
 
