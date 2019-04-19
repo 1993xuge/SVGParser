@@ -309,7 +309,7 @@ public class SVGImageView extends ImageView {
     }
 
 
-    private void doRender() {
+    protected void doRender() {
         if (svg == null)
             return;
         Picture picture = this.svg.renderToPicture(renderOptions);

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="color_view_width">48dp</dimen>
+    <dimen name="color_view_divide">8dp</dimen>
+</resources>

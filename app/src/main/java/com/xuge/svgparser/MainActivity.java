@@ -3,10 +3,14 @@ package com.xuge.svgparser;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import com.xuge.libsvg.SVG;
@@ -19,7 +23,10 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "xuge";
 
+    RecyclerView recyclerView;
     private List<Integer> colorList;
+    private CustomSvgImageView customSvgImageView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +67,15 @@ public class MainActivity extends AppCompatActivity {
         } catch (SVGParseException e) {
             e.printStackTrace();
         }
+
+        initRecycler();
+    }
+
+    private void initRecycler() {
+        recyclerView = findViewById(R.id.recycler);
+        CustomAdapter adapter = new CustomAdapter();
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
     }
 
     private void immersiveStyleBar() {
@@ -73,4 +89,53 @@ public class MainActivity extends AppCompatActivity {
         }
         getWindow().getDecorView().setSystemUiVisibility(flag);
     }
+
+    private class CustomAdapter extends RecyclerView.Adapter {
+
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+            View view = new View(viewGroup.getContext());
+            int width = (int) getResources().getDimension(R.dimen.color_view_width);
+            ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(width, width);
+            view.setLayoutParams(layoutParams);
+            return new ColorViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+            ((ColorViewHolder) viewHolder).bindColor(colorList.get(i));
+        }
+
+        @Override
+        public int getItemCount() {
+            return colorList != null ? colorList.size() : 0;
+        }
+    }
+
+    private class ColorViewHolder extends RecyclerView.ViewHolder {
+
+        int color = Color.BLACK;
+
+        public ColorViewHolder(@NonNull View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectColor(color);
+                }
+            });
+        }
+
+        public void bindColor(int color) {
+            this.color = color;
+            itemView.setBackgroundColor(color);
+        }
+    }
+
+    private void selectColor(int color) {
+
+    }
+
+
 }
