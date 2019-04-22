@@ -154,7 +154,7 @@ public class PhotoViewAttacher implements View.OnTouchListener,
 
         @Override
         public void onScale(float scaleFactor, float focusX, float focusY) {
-            Log.d("xuge123", "onScale: " + getScale() + "   scaleFactor = " + scaleFactor);
+//            Log.d("xuge123", "onScale: " + getScale() + "   scaleFactor = " + scaleFactor);
             if (getScale() < mMaxScale || scaleFactor < 1f) {
                 if (mScaleChangeListener != null) {
                     mScaleChangeListener.onScaleChange(scaleFactor, focusX, focusY);
@@ -186,6 +186,7 @@ public class PhotoViewAttacher implements View.OnTouchListener,
 
                         final RectF displayRect = getDisplayRect();
                         final float x = e.getX(), y = e.getY();
+                        Log.d(TAG, "onSingleTapUp: displayRect = " + displayRect + "    x = " + x + "   y = " + y);
                         if (mViewTapListener != null) {
                             mViewTapListener.onViewTap(mImageView, x, y);
                         }
@@ -364,9 +365,9 @@ public class PhotoViewAttacher implements View.OnTouchListener,
     }
 
     public float getScale() {
-        float scale =  (float) Math.sqrt((float) Math.pow(getValue(mSuppMatrix, Matrix.MSCALE_X), 2) + (float) Math.pow
+        float scale = (float) Math.sqrt((float) Math.pow(getValue(mSuppMatrix, Matrix.MSCALE_X), 2) + (float) Math.pow
                 (getValue(mSuppMatrix, Matrix.MSKEW_Y), 2));
-        Log.d("xuge123", "getScale: mSuppMatrix = " + mSuppMatrix.toShortString() + "   scale = " + scale);
+//        Log.d("xuge123", "getScale: mSuppMatrix = " + mSuppMatrix.toShortString() + "   scale = " + scale);
         return scale;
     }
 
@@ -402,7 +403,7 @@ public class PhotoViewAttacher implements View.OnTouchListener,
                     break;
                 case MotionEvent.ACTION_CANCEL:
                 case MotionEvent.ACTION_UP:
-                    Log.d("xuge123", "onTouch: " + getScale() + "   mMinScale = " + mMinScale + "   mMaxScale = " + mMaxScale);
+//                    Log.d("xuge123", "onTouch: " + getScale() + "   mMinScale = " + mMinScale + "   mMaxScale = " + mMaxScale);
                     // If the user has zoomed less than min scale, zoom back
                     // to min scale
                     if (getScale() < mMinScale) {

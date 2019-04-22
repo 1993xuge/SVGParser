@@ -12,6 +12,7 @@ import android.graphics.Region;
 import android.graphics.drawable.PictureDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseArray;
 import android.widget.ImageView;
 
 import com.github.chrisbanes.photoview.OnMatrixChangedListener;
@@ -23,6 +24,7 @@ import com.xuge.libsvg.SVG;
 import com.xuge.libsvg.SVGAndroidRenderer;
 import com.xuge.libsvg.SVGImageView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -73,13 +75,27 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
     protected void doRender() {
         super.doRender();
 
-        /*Random random = new Random();
+        Random random = new Random();
 
         SparseArray<List<SVG.Path>> sparseArray = svg.getClassifiedPaths();
-        currentColor = sparseArray.keyAt(random.nextInt(sparseArray.size()));
+        int index = random.nextInt(sparseArray.size());
+        currentColor = sparseArray.keyAt(index);
+
+        Log.d("xuge123", "doRender: index = " + index);
         currentPaths = sparseArray.get(currentColor);
 
-        updateDrawable(currentPaths, currentColor, true);*/
+        for (SVG.Path path : currentPaths) {
+            path.getBaseStyle().setColor(currentColor);
+        }
+
+        Picture picture = ((PictureDrawable) getDrawable()).getPicture();
+        Canvas canvas = picture.beginRecording(picture.getWidth(), picture.getHeight());
+        svg.renderToCanvas(canvas);
+        picture.endRecording();
+        invalidate();
+//        updateDrawable(currentPaths, currentColor, true);
+
+        Log.d("currentColor", "doRender: currentColor = " + currentColor);
     }
 
     @Override
@@ -99,7 +115,7 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
     public void onPhotoTap(ImageView view, float x, float y) {
         Log.d(TAG, "onPhotoTap: x = " + x + "   y = " + y);
         drawTime = System.currentTimeMillis();
-        fillColor(x, y);
+        fillColor2(x, y);
     }
 
     private List<SVG.Path> currentPaths;
@@ -145,7 +161,7 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
         canvas.concat(SVGAndroidRenderer.calculateViewBoxTransform(viewPort, viewBox, positioning));
 
         Random random = new Random();
-        for (SVG.Path sPath : svg.getPathList()) {
+        for (SVG.Path sPath : currentPaths) {
             int color = sPath.getBaseStyle().getColor();
             if (color != Color.BLACK && isRightPath(sPath, floats[0], floats[1])) {
                 color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
@@ -210,16 +226,20 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
         float[] floats = svgPoints(new float[]{x, y});
         SVG.Path paintPath = null;
         long time = System.currentTimeMillis();
+        Region pathRegion = new Region();
+        Region clipRegion = new Region();
+
         for (SVG.Path sPath : svg.getPathList()) {
             if (sPath.getBaseStyle().getColor() == Color.BLACK) {
                 continue;
             }
             long simtime = System.currentTimeMillis();
-            Region region = new Region();
             SVG.Box box = sPath.getBoundingBox();
             Path path = sPath.getPath();
-            region.setPath(path, new Region((int) box.getMinX(), (int) box.getMinY(), (int) box.maxX(), (int) box.maxY()));
-            if (region.contains((int) floats[0], (int) floats[1])) {
+            clipRegion.set((int) box.getMinX(), (int) box.getMinY(), (int) box.maxX(), (int) box.maxY());
+            pathRegion.setPath(path, clipRegion);
+
+            if (pathRegion.contains((int) floats[0], (int) floats[1])) {
                 paintPath = sPath;
                 break;
             }
@@ -241,6 +261,175 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
 //            Picture picture = this.svg.renderToPicture(renderOptions);
 //            setImageDrawable(new PictureDrawable(picture));
         }
+    }
+
+    private void fillColor2(float x, float y) {
+        long time = System.currentTimeMillis();
+        SVG.Path paintPath = findPath(x, y);
+        Log.d("xuge123", "fillColor2: findPath time = " + (System.currentTimeMillis() - time) + "   path = " + paintPath);
+        if (paintPath != null) {
+            Random random = new Random();
+            paintPath.getBaseStyle().setColor(Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)));
+
+            Picture picture = ((PictureDrawable) getDrawable()).getPicture();
+            Canvas canvas = picture.beginRecording(picture.getWidth(), picture.getHeight());
+            svg.renderToCanvas(canvas);
+            picture.endRecording();
+            invalidate();
+//            Picture picture = this.svg.renderToPicture(renderOptions);
+//            setImageDrawable(new PictureDrawable(picture));
+        }
+    }
+
+    int max = 20;
+
+    private SVG.Path findPath(float x, float y) {
+        max = getMax();
+        Log.d("xuge123", "findPath: x = " + x + "  y = " + y);
+        float[] floats = svgPoints(new float[]{x, y});
+        x = floats[0];
+        y = floats[1];
+        Log.d("xuge123", "findPath: x = " + floats[0] + "  y = " + floats[1]);
+
+        Region clickRegion = new Region();
+        Path path = new Path();
+        path.addCircle(x, y, max, Path.Direction.CW);
+        clickRegion.setPath(path, new Region((int) x - max, (int) y - max, (int) x + max, (int) y + max));
+
+        long time = System.currentTimeMillis();
+        List<SVG.Path> availablePaths = findAvailablePaths(x, y, clickRegion);
+        Log.d("xuge123", "findPath: findAvailablePaths time = " + (System.currentTimeMillis() - time) + "   availablePaths = " + availablePaths);
+        if (availablePaths.size() == 0) {
+            return null;
+        }
+
+        if (availablePaths.size() == 1) {
+            return availablePaths.get(0);
+        }
+
+        time = System.currentTimeMillis();
+        SVG.Path paintPath = findClickPath((int) x, (int) y, availablePaths);
+        Log.d("xuge123", "findPath: findClickPath time = " + (System.currentTimeMillis() - time) + "   paintPath = " + paintPath);
+
+        return paintPath;
+    }
+
+    private List<SVG.Path> findAvailablePaths(float x, float y, Region clickRegion) {
+        List<SVG.Path> availablePaths = new ArrayList<>();
+        Log.d("xuge123", "findAvailablePaths: currentPaths size = " + currentPaths.size() + "   clickRegion = " + clickRegion.getBounds());
+        Region temp = new Region();
+        for (SVG.Path sPath : currentPaths) {
+            Region region = new Region();
+            SVG.Box box = sPath.getBoundingBox();
+            Path path = sPath.getPath();
+            region.setPath(path, new Region((int) box.getMinX(), (int) box.getMinY(), (int) box.maxX(), (int) box.maxY()));
+
+            if (region.contains((int) x, (int) y)) {
+                Log.d("xuge123", "findAvailablePaths: contains break ");
+                // 在Path内部，退出循环
+                availablePaths.clear();
+                availablePaths.add(sPath);
+                break;
+            }
+
+            // TODO: 2019/4/22  findAvailablePaths 判断是否涂过色
+            if (false) {
+                continue;
+            }
+
+            boolean isIntersect = temp.op(region, clickRegion, Region.Op.INTERSECT);
+            Log.d("xuge123", "findAvailablePaths: isIntersect = " + isIntersect);
+            if (isIntersect) {
+                availablePaths.add(sPath);
+            }
+        }
+        return availablePaths;
+    }
+
+    private SVG.Path findClickPath(int x, int y, List<SVG.Path> availablePaths) {
+        Region temp = new Region();
+        Region clickRegion = new Region();
+
+        Region pathRegion = new Region();
+        Region clipRegion = new Region();
+        SVG.Path clickPath = null;
+
+        int regionRadius = max;
+
+        List<SVG.Path> tempList = new ArrayList<>();
+
+        int left = 0;
+        int right = max;
+        while ((right - left) > 1 && availablePaths.size() > 1) {
+            regionRadius = left + (right - left) / 2;
+            Log.d("xuge123", "findClickPath: left = " + left + "   right = " + right + "   availablePaths = " + availablePaths.size());
+
+            Region r = new Region(x - regionRadius, y - regionRadius, x + regionRadius, y + regionRadius);
+            Path tempPath = new Path();
+            tempPath.addCircle(x, y, regionRadius, Path.Direction.CW);
+            clickRegion.set(x - regionRadius, y - regionRadius, x + regionRadius, y + regionRadius);
+            clickRegion.setPath(tempPath, r);
+            for (SVG.Path path : availablePaths) {
+
+                SVG.Box box = path.getBoundingBox();
+                Log.d("xuge123", "findClickPath: box = " + box);
+                clipRegion.set((int) box.getMinX(), (int) box.getMinY(), (int) box.maxX(), (int) box.maxY());
+                pathRegion.setPath(path.getPath(), clipRegion);
+
+                boolean result = temp.op(clickRegion, pathRegion, Region.Op.INTERSECT);
+                if (result) {
+                    tempList.add(path);
+                }
+            }
+
+            Log.d("xuge123", "findClickPath: tempList size = " + tempList.size());
+            //
+            if (tempList.isEmpty()) {
+                left = regionRadius + 1;
+            } else {
+                right = regionRadius - 1;
+                availablePaths.clear();
+                availablePaths.addAll(tempList);
+            }
+            tempList.clear();
+        }
+
+        /*here:
+        for (int i = 1; i <= max; i++) {
+            Log.d("xuge123", "findClickPath: i = " + i);
+            clickRegion.set(x - i, y - i, x + i, y + i);
+            for (SVG.Path path : availablePaths) {
+
+                SVG.Box box = path.getBoundingBox();
+                clipRegion.set((int) box.getMinX(), (int) box.getMinY(), (int) box.maxX(), (int) box.maxY());
+                pathRegion.setPath(path.getPath(), clipRegion);
+
+                boolean result = temp.op(clickRegion, pathRegion, Region.Op.INTERSECT);
+                if (result) {
+                    clickPath = path;
+                    break here;
+                }
+            }
+        }*/
+
+        Log.d("xuge123", "findClickPath: find   " + availablePaths.size());
+        if (availablePaths.size() > 0) {
+            clickPath = availablePaths.get(0);
+        }
+        Log.d("xuge123", "findClickPath: clickPath = " + clickPath);
+        return clickPath;
+    }
+
+    private int getMax(){
+        SVG.Svg rootObj = svg.getRootElement();
+        SVG.Box viewBox = rootObj.getViewBox();
+        SVG.Box viewPort = new SVG.Box(0, 0, pictureWidth, pictureHeight);
+        PreserveAspectRatio positioning = new PreserveAspectRatio(PreserveAspectRatio.Alignment.xMidYMid, PreserveAspectRatio.Scale.meet);
+
+        Matrix matrix = SVGAndroidRenderer.calculateViewBoxTransform(viewPort, viewBox, positioning);
+        max = (int) matrix.mapRadius(40);
+        Log.d("xuge123", "getMax: after max = " + max);
+        return max;
     }
 
     private float[] svgPoints(float[] floats) {
