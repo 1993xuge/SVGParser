@@ -23,6 +23,8 @@ import com.xuge.libsvg.PreserveAspectRatio;
 import com.xuge.libsvg.SVG;
 import com.xuge.libsvg.SVGAndroidRenderer;
 import com.xuge.libsvg.SVGImageView;
+import com.xuge.svgparser.db.PaintDBManager;
+import com.xuge.svgparser.db.PathPaintData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,17 +77,48 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
     protected void doRender() {
         super.doRender();
 
-        Random random = new Random();
+//        updateHitColorWithIndex(0);
+//        updateDrawable(currentPaths, currentColor, true);
 
+        Log.d("currentColor", "doRender: currentColor = " + currentColor);
+    }
+
+    private void clearHit() {
+        if (currentPaths == null) {
+            return;
+        }
+        for (SVG.Path path : currentPaths) {
+            SVG.CustomStyle customStyle = path.getPaintStyle();
+            if (customStyle != null) {
+                customStyle.setShowHitColor(false);
+            }
+        }
+    }
+
+    private void updateHitColorWithIndex(int index) {
         SparseArray<List<SVG.Path>> sparseArray = svg.getClassifiedPaths();
-        int index = random.nextInt(sparseArray.size());
-        currentColor = sparseArray.keyAt(index);
+        updateHitColor(sparseArray.keyAt(index));
+    }
 
-        Log.d("xuge123", "doRender: index = " + index);
-        currentPaths = sparseArray.get(currentColor);
+    private void updateHitColor(int color) {
+        Log.d("wyx", "updateHitColor: color = " + Integer.toHexString(color));
+        clearHit();
+
+        currentPaths = svg.getPathsByColor(color);
+        if (currentPaths == null) {
+            throw new RuntimeException("error color");
+        }
+
+        currentColor = color;
 
         for (SVG.Path path : currentPaths) {
-            path.getBaseStyle().setColor(currentColor);
+            SVG.CustomStyle customStyle = path.getPaintStyle();
+            if (customStyle != null) {
+                customStyle.setShowHitColor(true);
+            } else {
+                customStyle = new SVG.CustomStyle(true);
+                path.setPaintStyle(customStyle);
+            }
         }
 
         Picture picture = ((PictureDrawable) getDrawable()).getPicture();
@@ -93,9 +126,6 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
         svg.renderToCanvas(canvas);
         picture.endRecording();
         invalidate();
-//        updateDrawable(currentPaths, currentColor, true);
-
-        Log.d("currentColor", "doRender: currentColor = " + currentColor);
     }
 
     @Override
@@ -122,11 +152,11 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
     private int currentColor;
 
     public void selectColor(int color) {
-        currentPaths = svg.getPathsByColor(color);
-        if (currentPaths == null) {
-            throw new RuntimeException("color error");
-        }
-        currentColor = color;
+        updateHitColor(color);
+    }
+
+    public void selectColorIndex(int index) {
+        updateHitColorWithIndex(index);
     }
 
 
@@ -268,8 +298,11 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
         SVG.Path paintPath = findPath(x, y);
         Log.d("xuge123", "fillColor2: findPath time = " + (System.currentTimeMillis() - time) + "   path = " + paintPath);
         if (paintPath != null) {
-            Random random = new Random();
-            paintPath.getBaseStyle().setColor(Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)));
+//            Random random = new Random();
+//            paintPath.getBaseStyle().setColor(Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)));
+
+            paintPath.getPaintStyle().setColor(currentColor);
+            PaintDBManager.getInstance().replacePathPaintData(new PathPaintData(paintPath.getId(), currentColor));
 
             Picture picture = ((PictureDrawable) getDrawable()).getPicture();
             Canvas canvas = picture.beginRecording(picture.getWidth(), picture.getHeight());
@@ -420,7 +453,7 @@ public class CustomSvgImageView extends SVGImageView implements OnPhotoTapListen
         return clickPath;
     }
 
-    private int getMax(){
+    private int getMax() {
         SVG.Svg rootObj = svg.getRootElement();
         SVG.Box viewBox = rootObj.getViewBox();
         SVG.Box viewPort = new SVG.Box(0, 0, pictureWidth, pictureHeight);

@@ -58,6 +58,7 @@ import com.xuge.libsvg.SVG.Rect;
 import com.xuge.libsvg.SVG.SolidColor;
 import com.xuge.libsvg.SVG.Stop;
 import com.xuge.libsvg.SVG.Style;
+import com.xuge.libsvg.SVG.CustomStyle;
 import com.xuge.libsvg.SVG.Style.FontStyle;
 import com.xuge.libsvg.SVG.Style.RenderQuality;
 import com.xuge.libsvg.SVG.Style.TextAnchor;
@@ -426,6 +427,10 @@ public class SVGAndroidRenderer {
         // Apply the styles defined by the 'style' attribute. They have the highest precedence.
         if (obj.style != null)
             updateStyle(state, obj.style);
+
+        if (obj.paintStyle != null) {
+            updateCustomStyle(state, obj.paintStyle);
+        }
     }
 
 
@@ -2261,6 +2266,25 @@ public class SVGAndroidRenderer {
         }
     }
 
+    private void updateCustomStyle(RendererState state, CustomStyle style) {
+        if (style == null) {
+            return;
+        }
+
+        Colour color = null;
+        if (style.color != null) {
+            color = style.color;
+        } else {
+            if (style.showHitColor) {
+                color = Colour.HITCOLOR;
+            }
+        }
+
+//        state.style.color = color;
+        if (color != null) {
+            state.fillPaint.setColor(color.colour);
+        }
+    }
 
     private void setPaintColour(RendererState state, boolean isFill, SvgPaint paint) {
         float paintOpacity = (isFill) ? state.style.fillOpacity : state.style.strokeOpacity;

@@ -1299,6 +1299,31 @@ public class SVG {
         }
     }
 
+    public static class CustomStyle implements Cloneable {
+        Colour color = null;
+        boolean showHitColor = false;
+
+        public CustomStyle() {
+        }
+
+        public CustomStyle(boolean showHitColor) {
+            this.showHitColor = showHitColor;
+        }
+
+        public CustomStyle(Colour color, boolean showHitColor) {
+            this.color = color;
+            this.showHitColor = showHitColor;
+        }
+
+        public void setColor(int color) {
+            this.color = new Colour(color);
+        }
+
+        public void setShowHitColor(boolean showHitColor) {
+            this.showHitColor = showHitColor;
+        }
+    }
+
 
     // What fill or stroke is
     abstract static class SvgPaint implements Cloneable {
@@ -1310,6 +1335,7 @@ public class SVG {
 
         static final Colour BLACK = new Colour(0xff000000);  // Black singleton - a common default value.
         static final Colour TRANSPARENT = new Colour(0);     // Transparent black
+        static final Colour HITCOLOR = new Colour(Color.GRAY);     // hit color
 
         Colour(int val) {
             this.colour = val;
@@ -1508,11 +1534,12 @@ public class SVG {
 
 
     // Any object in the tree that corresponds to an SVG element
-    static abstract class SvgElementBase extends SvgObject {
+    public  static abstract class SvgElementBase extends SvgObject {
         String id = null;
         Boolean spacePreserve = null;
         Style baseStyle = null;   // style defined by explicit style attributes in the element (eg. fill="black")
         Style style = null;       // style expressed in a 'style' attribute (eg. style="fill:black")
+        CustomStyle paintStyle = null;
         List<String> classNames = null;  // contents of the 'class' attribute
 
         public String toString() {
@@ -1525,6 +1552,14 @@ public class SVG {
 
         public String getId() {
             return id;
+        }
+
+        public CustomStyle getPaintStyle() {
+            return paintStyle;
+        }
+
+        public void setPaintStyle(CustomStyle paintStyle) {
+            this.paintStyle = paintStyle;
         }
     }
 
@@ -2402,7 +2437,7 @@ public class SVG {
     }
 
 
-    SvgElementBase getElementById(String id) {
+    public SvgElementBase getElementById(String id) {
         if (id == null || id.length() == 0)
             return null;
         if (id.equals(rootElement.id))
@@ -2464,6 +2499,9 @@ public class SVG {
         SvgContainer parent = path.parent;
         if (parent instanceof Group) {
             int color = ((Group) parent).color;
+            if (color == Color.BLACK) {
+                return;
+            }
             List<Path> paths = classifiedPathArray.get(color);
             if (paths == null) {
                 paths = new ArrayList<>();
@@ -2480,6 +2518,4 @@ public class SVG {
     public List<Path> getPathsByColor(int color) {
         return classifiedPathArray.get(color);
     }
-
-
 }
