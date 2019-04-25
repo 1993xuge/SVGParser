@@ -16,9 +16,10 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import com.xuge.libsvg.SVG;
-import com.xuge.libsvg.SVGParseException;
 import com.xuge.svgparser.db.PaintDBManager;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,9 +43,16 @@ public class MainActivity extends AppCompatActivity {
         colorList = new ArrayList<>();
 
         customSvgImageView = findViewById(R.id.svg);
-
+        InputStream is = null;
         try {
-            final SVG svg = SVG.getFromResource(MainActivity.this, R.raw.lion);
+            is = getResources().openRawResource(R.raw.data1);
+            Log.d(TAG, "onCreate: parse start");
+            CustomInputStream customInputStream = new CustomInputStream(is);
+            Log.d(TAG, "onCreate: customInputStream = " + customInputStream.getClass().getSimpleName());
+            final SVG svg = SVG.getFromInputStream(customInputStream);
+            Log.d(TAG, "onCreate: parse end");
+
+//            final SVG svg = SVG.getFromInputStream(is);
 
             initSvg(svg);
 
@@ -73,8 +81,17 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             });
-        } catch (SVGParseException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            Log.d(TAG, "onCreate: Exception = " + e);
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         initRecycler();
