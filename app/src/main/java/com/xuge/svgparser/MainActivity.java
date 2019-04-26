@@ -1,9 +1,7 @@
 package com.xuge.svgparser;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -21,10 +19,8 @@ import android.view.WindowManager;
 
 import com.xuge.libsvg.SVG;
 import com.xuge.svgparser.db.PaintDBManager;
+import com.xuge.svgparser.utils.BitmapUtils;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -148,49 +144,17 @@ public class MainActivity extends AppCompatActivity {
     public void savePic(View view) {
         long time = System.currentTimeMillis();
         Drawable drawable = customSvgImageView.getDrawable();
-        Bitmap bitmap = drawableToBitmap(drawable);
+        Bitmap bitmap = BitmapUtils.drawableToBitmap(drawable);
 
         try {
-            saveFile(bitmap, "ahahha.png", getFilesDir().getPath());
+            BitmapUtils.saveBitmap(bitmap, "ahahha.png", getFilesDir().getPath());
         } catch (IOException e) {
             e.printStackTrace();
-            Log.d(TAG, "savePic: " + e);
         }
 
         Log.d(TAG, "savePic: time " + (System.currentTimeMillis() - time));
     }
 
-    public static void saveFile(Bitmap bm, String fileName, String path) throws IOException {
-        File foder = new File(path);
-        if (!foder.exists()) {
-            foder.mkdirs();
-        }
-        File myCaptureFile = new File(path, fileName);
-        if (!myCaptureFile.exists()) {
-            myCaptureFile.createNewFile();
-        }
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(myCaptureFile));
-        bm.compress(Bitmap.CompressFormat.PNG, 80, bos);
-        bos.flush();
-        bos.close();
-    }
-
-    public static Bitmap drawableToBitmap(Drawable drawable) {
-
-        int w = drawable.getIntrinsicWidth();
-        int h = drawable.getIntrinsicHeight();
-        Log.d(TAG, "drawableToBitmap: " + drawable.getOpacity());
-        Bitmap.Config config =
-                drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
-                        : Bitmap.Config.RGB_565;
-        Bitmap bitmap = Bitmap.createBitmap(w, h, config);
-        //注意，下面三行代码要用到，否则在View或者SurfaceView里的canvas.drawBitmap会看不到图
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, w, h);
-        drawable.draw(canvas);
-
-        return Bitmap.createScaledBitmap(bitmap, w / 2, h / 2, false);
-    }
 
     private class CustomItemDecoration extends RecyclerView.ItemDecoration {
         @Override

@@ -1,4 +1,4 @@
-package com.xuge.svgparser;
+package com.xuge.svgparser.utils;
 
 import android.content.res.AssetManager;
 import android.util.Log;
@@ -28,7 +28,6 @@ public class ZipUtils {
     }
 
     public static void unZipFolder(AssetManager assetManager, String zipFileString, String outPathString) throws Exception {
-        Log.d(TAG, "unZipFolder: zipFileString = " + zipFileString + "   outPathString = " + outPathString);
         InputStream is = assetManager.open(zipFileString);
         unZipFolder(is, outPathString);
     }
@@ -74,7 +73,6 @@ public class ZipUtils {
      *
      * @param zipFileString ZIP的名称
      * @param outPathString 要解压缩路径
-     * @throws Exception
      */
     public static void UnZipFolder(String zipFileString, String outPathString) throws Exception {
         unZipFolder(new FileInputStream(zipFileString), outPathString);
